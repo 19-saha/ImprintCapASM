@@ -1,0 +1,22 @@
+##fileformat=VCFv4.3
+##fileDate=20260101
+##bssnperVersion=1.1
+##reference=GRCh38
+##Bisulfite=directional>
+##contig=<ID=chr11,length=135086622>
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Raw read depth">
+##INFO=<ID=AD,Number=R,Type=Integer,Description="Total allelic depths">
+##INFO=<ID=ADF,Number=R,Type=Integer,Description="Total allelic depths on the forward strand">
+##INFO=<ID=ADR,Number=R,Type=Integer,Description="Total allelic depths on the reverse strand">
+##FILTER=<ID=Low,Description="Low Quality">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Number of high-quality bases">
+##FORMAT=<ID=AD,Number=R,Type=Integer,Description="Allelic depths">
+##FORMAT=<ID=ADF,Number=R,Type=Integer,Description="Allelic depths on the forward strand">
+##FORMAT=<ID=ADR,Number=R,Type=Integer,Description="Allelic depths on the reverse strand">
+##FORMAT=<ID=BSD,Number=8,Type=Integer,Description="Depth, ATCG in watson strand and crick strand">
+##FORMAT=<ID=BSQ,Number=8,Type=Integer,Description="Average Base Quality, ATCG in watson and crick strand">
+##FORMAT=<ID=ALFR,Number=R,Type=Float,Description="Allele frequency">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	example_sample.bam
+chr11	2016400	.	G	A	85	PASS	DP=28;ADF=14,13;ADR=1,0;AD=15,13;	GT:DP:ADF:ADR:AD:BSD:BSQ:ALFR	0/1:28:14,13:1,0:15,13:14,0,0,1,0,0,0,0:34,0,0,30,0,0,0,0:0.536,0.464
+chr11	2699495	.	C	T	92	PASS	DP=25;ADF=0,0;ADR=12,11;AD=12,11;	GT:DP:ADF:ADR:AD:BSD:BSQ:ALFR	0/1:25:0,0:12,11:12,11:0,0,0,0,0,12,0,0:0,0,0,0,0,34,0,0:0.480,0.440
