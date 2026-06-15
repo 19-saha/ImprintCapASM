@@ -1,0 +1,29 @@
+Package: ImprintCapASM
+Type: Package
+Title: Allele-Specific Methylation Analysis for Imprinted DMR Diagnostics
+Version: 0.1.0
+Authors@R: person("First", "Last",
+                   email = "you@email.com",
+                   role  = c("aut", "cre"))
+Description: Provides tools for SNP-phased allele-specific methylation (ASM)
+    analysis across the 41 known imprinted differentially methylated regions
+    (DMRs). Designed for diagnostic profiling of imprinting disorder cases
+    from bisulfite sequencing data.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Imports:
+    data.table,
+    readxl,
+    writexl,
+    vcfR,
+    ggplot2,
+    Rsamtools,
+    tools
+Suggests:
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+URL: https://github.com/19-saha/ImprintCapASM
+BugReports: https://github.com/19-saha/ImprintCapASM/issues
+Config/roxygen2/version: 8.0.0

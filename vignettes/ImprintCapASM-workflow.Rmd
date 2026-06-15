@@ -1,0 +1,104 @@
+---
+title: "ImprintCapASM-workflow"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{ImprintCapASM-workflow}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+```{r setup}
+library(ImprintCapASM)
+```
+
+## Overview
+
+ImprintCapASM is a three-step pipeline for SNP-phased allele-specific
+methylation (ASM) analysis across the 41 known imprinted differentially
+methylated regions (DMRs). It accepts a VCF SNP file, a bisulfite
+methylation table, and an aligned BAM file, and returns per-allele
+methylation fractions, summary tables, and diagnostic plots per DMR.
+
+## Installation
+
+```{r install}
+install.packages("ImprintCapASM")
+```
+
+## Requirements
+
+- R >= 4.1.0
+- `samtools` must be installed and on your system PATH
+- R packages: `data.table`, `vcfR`, `readxl`, `writexl`, `ggplot2`, `Rsamtools`
+
+## Input files
+
+Place the following files in your `input/` folder:
+
+| File | Description |
+|---|---|
+| `SAMPLEID_all.SNPs.out` | VCF SNP calls from bisulfite sequencing |
+| `SAMPLEID_all.CGmeth.txt` | Bisulfite methylation table |
+| `SAMPLEID_all_markdup.bam` | Aligned, duplicate-marked BAM file |
+
+The reference file `data/filter_Cpgs.xlsx` is bundled with the package.
+
+## Running the full pipeline
+
+```{r pipeline}
+source("run_pipeline.R")
+# You will be prompted:
+# Enter sample type [control / patient]: control
+```
+
+## Step 1 — prepare_cpg_snp_input()
+
+```{r step1}
+prepare_cpg_snp_input(
+  snp_file     = "input/SAMPLE_all.SNPs.out",
+  meth_file    = "input/SAMPLE_all.CGmeth.txt",
+  cpg_ref_file = "data/filter_Cpgs.xlsx",
+  output_file  = "asm_results/cpg_snps_control_SAMPLE.xlsx",
+  sample_type  = "control"
+)
+```
+
+## Step 2 — extract_bam_regions()
+
+```{r step2}
+extract_bam_regions(
+  bam_file    = "input/SAMPLE_all_markdup.bam",
+  bed_file    = "asm_results/cpg_snps_control_SAMPLE.bed",
+  output_dir  = "bam_asm/",
+  sample_type = "control"
+)
+```
+
+## Step 3 — ASM()
+
+```{r step3}
+ASM(
+  cpg_snp_file     = "asm_results/cpg_snps_control_SAMPLE.xlsx",
+  sam_file         = "bam_asm/control_SAMPLE_all_wide.bam",
+  filter_cpgs_file = "data/filter_Cpgs.xlsx",
+  output_file      = "asm_results/asm_control_SAMPLE.xlsx",
+  sample_type      = "control"
+)
+```
+
+## Output files
+
+| File | Contents |
+|---|---|
+| `asm_<type>_<id>.xlsx` | Full read-level ASM table |
+| `snp_cpg_<type>_<id>.xlsx` | Per SNP×CpG methylation fractions |
+| `meth_summary_<type>_<id>.xlsx` | Allele methylation summary per DMR |
+| `dmr_plots_<type>_<id>.pdf` | Diagnostic line plots per DMR |
