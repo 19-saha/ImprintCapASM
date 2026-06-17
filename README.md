@@ -1,7 +1,7 @@
 # ImprintCapASM <img src="man/figures/logo.png" align="right" height="139" />
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/YOUR_GITHUB/ImprintCapASM/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/YOUR_GITHUB/ImprintCapASM/actions)
+[![R-CMD-check](https://github.com/19-saha/ImprintCapASM/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/19-saha/ImprintCapASM/actions)
 [![CRAN status](https://www.r-pkg.org/badges/version/ImprintCapASM)](https://CRAN.R-project.org/package=ImprintCapASM)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <!-- badges: end -->
