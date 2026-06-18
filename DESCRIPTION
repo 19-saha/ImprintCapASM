@@ -2,9 +2,15 @@ Package: ImprintCapASM
 Type: Package
 Title: Allele-Specific Methylation Analysis for Imprinted DMR Diagnostics
 Version: 0.1.0
-Authors@R: person("Subham", "Saha",
+Authors@R: c(person(given = "Subham", family = "Saha",
                    email = "saha_19@outlook.com",
-                   role  = c("aut", "cre"))
+                   role  = c("aut", "cre")),
+             person(given = "Francesco", family = "Cecere",
+                    email = "francesco.cecerengs@gmail.com",
+                    role = "aut"),
+             person(given = "Frederic", family = "Brioude",
+                    email = "frederic.brioude@aphp.fr",
+                    role = c("aut", "fnd")))
 Description: Provides tools for SNP-phased allele-specific methylation (ASM)
     analysis across the 41 known imprinted differentially methylated regions
     (DMRs). Designed for diagnostic profiling of imprinting disorder cases
