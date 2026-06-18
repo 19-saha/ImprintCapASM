@@ -4,7 +4,7 @@ Title: Allele-Specific Methylation Analysis for Imprinted DMR Diagnostics
 Version: 0.1.0
 Authors@R: c(person(given = "Subham", family = "Saha",
                    email = "saha_19@outlook.com",
-                   role = c("aut", "cre", "cph"))
+                   role = c("aut", "cre", "cph")),
              person(given = "Francesco", family = "Cecere",
                     email = "francesco.cecerengs@gmail.com",
                     role = "aut"),
