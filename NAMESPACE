@@ -3,6 +3,7 @@
 export(ASM)
 export(extract_bam_regions)
 export(prepare_cpg_snp_input)
+export(run_pipeline)
 importFrom(Rsamtools,ScanBamParam)
 importFrom(Rsamtools,indexBam)
 importFrom(Rsamtools,scanBam)
