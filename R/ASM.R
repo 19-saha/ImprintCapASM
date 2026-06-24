@@ -9,14 +9,57 @@ utils::globalVariables(c(
 
 #' Run Allele-Specific Methylation Analysis
 #'
-#' @param cpg_snp_file    Path to the Excel output from prepare_cpg_snp_input()
-#' @param sam_file        Path to the extracted wide BAM file
-#' @param filter_cpgs_file Path to the CpG filter/reference Excel file
-#' @param output_file     Optional path for the ASM output .xlsx; auto-named if NULL
-#' @param sample_type     Either "control" or "patient"
+#' Performs SNP-phased allele-specific methylation (ASM) analysis across
+#' the canonical human imprinted differentially methylated regions (DMRs).
+#' Reads are assigned to REF or ALT alleles based on bisulfite-aware SNP
+#' detection, and per-allele CpG methylation fractions are computed.
 #'
-#' @return A named list: asm, snp_cpg, meth_summary
-#' 
+#' @param cpg_snp_file    Character. Path to the Excel output from
+#'   \code{\link{prepare_cpg_snp_input}}.
+#' @param sam_file        Character. Path to the extracted wide BAM file
+#'   produced by \code{\link{extract_bam_regions}}.
+#' @param filter_cpgs_file Character. Path to the CpG filter/variability
+#'   reference Excel file (\code{filter_cpgs_ctrl.xlsx} or
+#'   \code{filter_cpgs_pat.xlsx}).
+#' @param output_file     Character or \code{NULL}. Path for the ASM output
+#'   \code{.xlsx}. Auto-named as \code{asm_<sample_type>_<sample_id>.xlsx}
+#'   if \code{NULL}.
+#' @param sample_type     Character. Either \code{"control"} or
+#'   \code{"patient"}.
+#' @param verbose         Logical. If \code{TRUE} (default), progress
+#'   messages are written via \code{message()}. Set to \code{FALSE} or
+#'   wrap the call in \code{suppressMessages()} to silence all output.
+#'
+#' @return A named list with three elements:
+#' \describe{
+#'   \item{asm}{Full read-level ASM results as a \code{data.table}.}
+#'   \item{snp_cpg}{Per SNP x CpG summary table.}
+#'   \item{meth_summary}{Per CpG allele methylation summary table.}
+#' }
+#'
+#' @examples
+#' \donttest{
+#'   extdata     <- system.file("extdata", package = "ImprintCapASM")
+#'   cpg_snp_tmp <- tempfile(fileext = ".xlsx")
+#'
+#'   prepare_cpg_snp_input(
+#'     snp_file     = file.path(extdata, "example_snp.out"),
+#'     meth_file    = file.path(extdata, "example_cgmeth.txt"),
+#'     cpg_ref_file = file.path(extdata, "example_filter_cpgs.xlsx"),
+#'     output_file  = cpg_snp_tmp,
+#'     sample_type  = "control"
+#'   )
+#'
+#'   result <- ASM(
+#'     cpg_snp_file     = cpg_snp_tmp,
+#'     sam_file         = file.path(extdata, "example.bam"),
+#'     filter_cpgs_file = file.path(extdata, "example_filter_cpgs.xlsx"),
+#'     output_file      = tempfile(fileext = ".xlsx"),
+#'     sample_type      = "control"
+#'   )
+#'   head(result$snp_cpg)
+#' }
+#'
 #' @importFrom data.table as.data.table data.table rbindlist dcast melt setorder uniqueN := .N .SD fcase
 #' @importFrom readxl read_xlsx
 #' @importFrom writexl write_xlsx
@@ -24,20 +67,20 @@ utils::globalVariables(c(
 #' @importFrom ggplot2 ggplot aes geom_line geom_point scale_shape_manual facet_wrap scale_color_manual scale_x_continuous scale_y_continuous labs theme_bw theme element_text element_rect
 #' @importFrom grDevices pdf dev.off
 #' @importFrom stats sd
-#' @importFrom utils write.table
-
+#' @importFrom utils write.table capture.output
 #' @export
 ASM <- function(cpg_snp_file,
-                           sam_file,
-                           filter_cpgs_file,
-                           output_file = NULL,
-                           sample_type = c("control", "patient")) {
+                sam_file,
+                filter_cpgs_file,
+                output_file  = NULL,
+                sample_type  = c("control", "patient"),
+                verbose      = TRUE) {
   
   sample_type <- match.arg(sample_type)
   
-  # --------------------------------------------------------------------------
-  # INNER: Bisulfite-aware allele assignment
-  # --------------------------------------------------------------------------
+  
+  # Bisulfite-aware allele assignment
+  
   assign_allele_bisulfite <- function(snp_base, ref_al, alt_al,
                                       strand_label, flag, md_tag) {
     allele_type     <- NA_character_
@@ -169,9 +212,9 @@ ASM <- function(cpg_snp_file,
          assignment_note = assignment_note)
   }
   
-  # --------------------------------------------------------------------------
-  # INNER: SNP/CpG summary table
-  # --------------------------------------------------------------------------
+  
+  # SNP/CpG summary table
+
   make_snp_cpg_table <- function(dt) {
     result <- dt[, {
       ref_idx   <- !is.na(allele_type) & allele_type == "REF"
@@ -205,9 +248,9 @@ ASM <- function(cpg_snp_file,
     result
   }
   
-  # --------------------------------------------------------------------------
-  # INNER: Methylation summary table
-  # --------------------------------------------------------------------------
+
+  # Methylation summary table
+  
   make_meth_summary <- function(dt) {
     dt2 <- dt[!allele_type %in% c("NA", "?") & !is.na(allele_type)]
     result <- dt2[,
@@ -227,11 +270,10 @@ ASM <- function(cpg_snp_file,
     result
   }
   
-  # --------------------------------------------------------------------------
-  # INNER: Line plot PDF per DMR
-  # --------------------------------------------------------------------------
+  
+  # Line plot PDF per DMR
   make_lineplot_pdf <- function(snp_cpg_dt, pdf_file) {
-    cat("Generating DMR line plots:", pdf_file, "\n")
+    if (verbose) message("Generating DMR line plots: ", pdf_file)
     plot_data <- melt(
       snp_cpg_dt,
       id.vars       = c("cpg_pos", "snp_pos", "DMR", "sample_id",
@@ -282,29 +324,27 @@ ASM <- function(cpg_snp_file,
               axis.text.x      = element_text(angle = 45, hjust = 1, size = 7),
               legend.position  = "top")
       print(p)
-      cat("  Plotted DMR:", dmr, "\n")
+      if (verbose) message("  Plotted DMR:", dmr)
     }
     dev.off()
-    cat("  PDF written:", pdf_file, "\n\n")
+    if (verbose) message("Saved: ", pdf_file)
   }
   
-  # --------------------------------------------------------------------------
-  # MAIN BODY
-  # --------------------------------------------------------------------------
-  cat("Loading CpG/SNP reference file:", cpg_snp_file, "\n")
+
+  if (verbose) message("Loading CpG/SNP reference file:", cpg_snp_file)
   if (!file.exists(cpg_snp_file)) stop("CpG/SNP file not found: ", cpg_snp_file)
   cpg_snp_data <- as.data.table(read_xlsx(cpg_snp_file))
-  cat("  Rows:", nrow(cpg_snp_data), "\n")
+  if (verbose) message("  Rows:", nrow(cpg_snp_data))
   
-  cat("Loading CpG filter file:", filter_cpgs_file, "\n")
+  if (verbose) message("Loading CpG filter file:", filter_cpgs_file)
   if (!file.exists(filter_cpgs_file)) stop("CpG file not found: ", filter_cpgs_file)
   processed_data <- as.data.table(read_xlsx(filter_cpgs_file))
-  cat("  Rows:", nrow(processed_data), "\n")
+  if (verbose) message("  Rows:", nrow(processed_data))
   
-  cat("Building CpG variation lookup...\n")
+  if (verbose) message("Building CpG variation lookup...")
   cpg_ref_raw  <- as.data.table(read_xlsx(filter_cpgs_file))
   sample_cols  <- grep("^(Control|Patient)_", names(cpg_ref_raw), value = TRUE)
-  cat("  Sample columns detected:", length(sample_cols), "\n")
+  if (verbose) message("  Sample columns detected:", length(sample_cols))
   
   cpg_ref_raw[, mean_methylation := round(rowMeans(.SD, na.rm = TRUE), 2),
               .SDcols = sample_cols]
@@ -331,11 +371,11 @@ ASM <- function(cpg_snp_file,
     sd_methylation,
     Category
   )]
-  cat("  Variation category counts in reference:\n")
+  if (verbose) message("  Variation category counts in reference:")
   print(cpg_var_lookup[!is.na(Category), .N, by = Category][order(Category)])
-  cat("\n")
+  if (verbose) message()
   
-  cat("Loading BAM file:", sam_file, "\n")
+  if (verbose) message("Loading BAM file:", sam_file)
   if (!file.exists(sam_file)) stop("BAM file not found: ", sam_file)
   
   bam_scan <- scanBam(
@@ -358,7 +398,7 @@ ASM <- function(cpg_snp_file,
                         function(x) if (is.null(x)) NA_character_ else as.character(x))
   )
   sam_dt <- sam_dt[flag %in% c(99L, 147L, 83L, 163L)]
-  cat("  Total reads loaded:", nrow(sam_dt), "\n\n")
+  if (verbose) message("  Total reads loaded:", nrow(sam_dt))
   
   sample_id  <- sub("_all_wide$", "",
                     tools::file_path_sans_ext(basename(sam_file)))
@@ -372,9 +412,9 @@ ASM <- function(cpg_snp_file,
   result_list <- vector("list", nrow(sam_dt) * 5L)
   list_idx    <- 1L
   
-  cat("Processing BAM reads...\n")
+  if (verbose) message("Processing BAM reads...")
   for (i in seq_len(nrow(sam_dt))) {
-    if (i %% 50000 == 0) cat("  Processed", i, "reads\n")
+    if (verbose && i %% 50000 == 0) message("  Processed ", i, " reads")
     
     flag       <- sam_dt$flag[i]
     read_chr   <- sam_dt$read_chr[i]
@@ -478,14 +518,14 @@ ASM <- function(cpg_snp_file,
     }
   }
   
-  cat("Finished processing BAM file\n\n")
+  if (verbose) message("Finished processing BAM file")
   
-  if (list_idx == 1L) { cat("No observations found\n"); return(NULL) }
+  if (list_idx == 1L) { message("No observations found"); return(NULL) }
   
   final_results <- rbindlist(result_list[1:(list_idx - 1L)])
   final_results <- final_results[cpg_pos != snp_pos]
   
-  cat("Filtering CpG positions: removing those with REF < 20 or ALT < 20 reads...\n")
+  if (verbose) message("Filtering CpG positions: removing those with REF < 20 or ALT < 20 reads...")
   cpg_counts      <- final_results[allele_type %in% c("REF","ALT"),
                                    .(n = .N), by = .(cpg_pos, snp_pos, allele_type)]
   cpg_counts_wide <- dcast(cpg_counts, cpg_pos + snp_pos ~ allele_type,
@@ -501,11 +541,11 @@ ASM <- function(cpg_snp_file,
   n_before <- uniqueN(final_results$cpg_pos)
   final_results <- final_results[valid_cpg_snp, on = .(cpg_pos, snp_pos), nomatch = 0L]
   n_after  <- uniqueN(final_results$cpg_pos)
-  cat("  CpG positions before filter:", n_before, "\n")
-  cat("  CpG positions after filter: ", n_after,  "\n")
-  cat("  CpG positions removed:      ", n_before - n_after, "\n\n")
+  if (verbose) message("  CpG positions before filter:", n_before)
+  if (verbose) message("  CpG positions after filter: ", n_after)
+  if (verbose) message("  CpG positions removed:      ", n_before - n_after)
   
-  cat("Computing per-SNP alignment padding...\n")
+  if (verbose) message("Computing per-SNP alignment padding...")
   snp_groups    <- final_results[,
                                  .(min_read_start_per_snp = min(read_start, na.rm = TRUE)),
                                  by = .(DMR, snp_pos)]
@@ -529,30 +569,31 @@ ASM <- function(cpg_snp_file,
     by = c("sample_id", "id", "chr", "DMR", "snp_pos", "cpg_pos", "allele_type")
   )
   
-  cat("Building SNP/CpG summary table...\n")
+  if (verbose) message("Building SNP/CpG summary table...")
   snp_cpg_table <- make_snp_cpg_table(final_results)
-  cat("Building methylation summary table...\n")
+  if (verbose) message("Building methylation summary table...")
   meth_summary_table <- make_meth_summary(final_results)
   
-  cat("SUMMARY STATISTICS\n")
-  cat("  Total rows:",           nrow(final_results), "\n")
-  cat("  Unique read IDs:",      uniqueN(final_results$id), "\n")
-  cat("  Unique DMRs:",          uniqueN(final_results$DMR), "\n")
-  cat("  Unique CpG positions:", uniqueN(final_results$cpg_pos), "\n")
-  cat("  REF reads:",            sum(final_results$allele_type == "REF", na.rm = TRUE), "\n")
-  cat("  ALT reads:",            sum(final_results$allele_type == "ALT", na.rm = TRUE), "\n")
-  cat("\nDMR distribution:\n")
+  if (verbose) message("SUMMARY STATISTICS")
+  if (verbose) message("  Total rows:",           nrow(final_results))
+  if (verbose) message("  Unique read IDs:",      uniqueN(final_results$id))
+  if (verbose) message("  Unique DMRs:",          uniqueN(final_results$DMR))
+  if (verbose) message("  Unique CpG positions:", uniqueN(final_results$cpg_pos))
+  if (verbose) message("  REF reads:",            sum(final_results$allele_type == "REF", na.rm = TRUE))
+  if (verbose) message("  ALT reads:",            sum(final_results$allele_type == "ALT", na.rm = TRUE))
+  if (verbose) message("DMR distribution:")
   print(final_results[, .N, by = DMR][order(-N)])
-  cat("\n")
   
-  cat("Joining CpG variation info into output tables...\n")
+  if (verbose) message()
+  
+  if (verbose) message("Joining CpG variation info into output tables...")
   join_var <- function(dt) {
     merge(dt, cpg_var_lookup, by = c("cpg_pos","DMR"), all.x = TRUE, sort = FALSE)
   }
   final_results      <- join_var(final_results)
   snp_cpg_table      <- join_var(snp_cpg_table)
   meth_summary_table <- join_var(meth_summary_table)
-  cat("  Done.\n\n")
+  if (verbose) message("  Done.")
   
   if (is.null(output_file))
     output_file <- paste0("asm_", sample_type, "_", sample_id, ".xlsx")
@@ -560,16 +601,16 @@ ASM <- function(cpg_snp_file,
   meth_sum_file <- paste0("meth_summary_", sample_type, "_", sample_id, ".xlsx")
   pdf_file      <- paste0("dmr_plots_",    sample_type, "_", sample_id, ".pdf")
   
-  cat("Writing ASM table:           ", output_file,   "\n")
+  if (verbose) message("Writing ASM table:           ", output_file)
   write_xlsx(final_results,      output_file)
-  cat("Writing SNP/CpG summary:     ", snp_cpg_file,  "\n")
+  if (verbose) message("Writing SNP/CpG summary:     ", snp_cpg_file)
   write_xlsx(snp_cpg_table,      snp_cpg_file)
-  cat("Writing methylation summary: ", meth_sum_file, "\n")
+  if (verbose) message("Writing methylation summary: ", meth_sum_file)
   write_xlsx(meth_summary_table, meth_sum_file)
   
   make_lineplot_pdf(snp_cpg_table, pdf_file)
   
-  cat("Done!\n\n")
+  if (verbose) message("Done!")
   return(list(asm          = final_results,
               snp_cpg      = snp_cpg_table,
               meth_summary = meth_summary_table))

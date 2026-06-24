@@ -9,23 +9,67 @@ ASM(
   sam_file,
   filter_cpgs_file,
   output_file = NULL,
-  sample_type = c("control", "patient")
+  sample_type = c("control", "patient"),
+  verbose = TRUE
 )
 }
 \arguments{
-\item{cpg_snp_file}{Path to the Excel output from prepare_cpg_snp_input()}
+\item{cpg_snp_file}{Character. Path to the Excel output from
+\code{\link{prepare_cpg_snp_input}}.}
 
-\item{sam_file}{Path to the extracted wide BAM file}
+\item{sam_file}{Character. Path to the extracted wide BAM file
+produced by \code{\link{extract_bam_regions}}.}
 
-\item{filter_cpgs_file}{Path to the CpG filter/reference Excel file}
+\item{filter_cpgs_file}{Character. Path to the CpG filter/variability
+reference Excel file (\code{filter_cpgs_ctrl.xlsx} or
+\code{filter_cpgs_pat.xlsx}).}
 
-\item{output_file}{Optional path for the ASM output .xlsx; auto-named if NULL}
+\item{output_file}{Character or \code{NULL}. Path for the ASM output
+\code{.xlsx}. Auto-named as \code{asm_<sample_type>_<sample_id>.xlsx}
+if \code{NULL}.}
 
-\item{sample_type}{Either "control" or "patient"}
+\item{sample_type}{Character. Either \code{"control"} or
+\code{"patient"}.}
+
+\item{verbose}{Logical. If \code{TRUE} (default), progress
+messages are written via \code{message()}. Set to \code{FALSE} or
+wrap the call in \code{suppressMessages()} to silence all output.}
 }
 \value{
-A named list: asm, snp_cpg, meth_summary
+A named list with three elements:
+\describe{
+  \item{asm}{Full read-level ASM results as a \code{data.table}.}
+  \item{snp_cpg}{Per SNP x CpG summary table.}
+  \item{meth_summary}{Per CpG allele methylation summary table.}
+}
 }
 \description{
-Run Allele-Specific Methylation Analysis
+Performs SNP-phased allele-specific methylation (ASM) analysis across
+the canonical human imprinted differentially methylated regions (DMRs).
+Reads are assigned to REF or ALT alleles based on bisulfite-aware SNP
+detection, and per-allele CpG methylation fractions are computed.
+}
+\examples{
+\donttest{
+  extdata     <- system.file("extdata", package = "ImprintCapASM")
+  cpg_snp_tmp <- tempfile(fileext = ".xlsx")
+
+  prepare_cpg_snp_input(
+    snp_file     = file.path(extdata, "example_snp.out"),
+    meth_file    = file.path(extdata, "example_cgmeth.txt"),
+    cpg_ref_file = file.path(extdata, "example_filter_cpgs.xlsx"),
+    output_file  = cpg_snp_tmp,
+    sample_type  = "control"
+  )
+
+  result <- ASM(
+    cpg_snp_file     = cpg_snp_tmp,
+    sam_file         = file.path(extdata, "example.bam"),
+    filter_cpgs_file = file.path(extdata, "example_filter_cpgs.xlsx"),
+    output_file      = tempfile(fileext = ".xlsx"),
+    sample_type      = "control"
+  )
+  head(result$snp_cpg)
+}
+
 }

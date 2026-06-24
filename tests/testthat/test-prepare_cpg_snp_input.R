@@ -1,3 +1,4 @@
+library(ImprintCapASM)
 test_that("rejects invalid sample_type", {
   expect_error(
     prepare_cpg_snp_input(
@@ -17,6 +18,7 @@ test_that("rejects missing snp_file", {
       meth_file    = "dummy.txt",
       cpg_ref_file = "dummy.xlsx",
       sample_type  = "control"
-    )
+        ),
+    regexp = "not found|does not exist|cannot open"
   )
 })

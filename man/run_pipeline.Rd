@@ -2,7 +2,7 @@
 % Please edit documentation in R/run_pipeline.R
 \name{run_pipeline}
 \alias{run_pipeline}
-\title{Run the Full ImprintCapASM Pipeline for a Batch of Samples}
+\title{Run the Full ImprintCapASM Pipeline}
 \usage{
 run_pipeline(
   bam_dir,
@@ -14,7 +14,8 @@ run_pipeline(
   bed_file,
   min_depth = 20L,
   window_bp = 60L,
-  overwrite = FALSE
+  overwrite = FALSE,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -29,8 +30,8 @@ methylation files (Bismark \code{.cov} or similar).}
 
 \item{cpg_ref_file}{Character. Path to the cohort-matched
 \code{filter_cpgs} reference \code{.xlsx} file.
-Use \code{inst/extdata/filter_cpgs_ctrl.xlsx} for controls and
-\code{inst/extdata/filter_cpgs_pat.xlsx} for patients.}
+Use the file bundled in \code{inst/extdata/filter_cpgs_ctrl.xlsx}
+for controls and \code{inst/extdata/filter_cpgs_pat.xlsx} for patients.}
 
 \item{output_dir}{Character. Directory where all output files are written.
 Created automatically if it does not exist.}
@@ -49,33 +50,42 @@ regions used by \code{\link{extract_bam_regions}}.}
 
 \item{overwrite}{Logical. If \code{TRUE}, re-runs extraction even when
 output BAM files already exist. Default \code{FALSE}.}
+
+\item{verbose}{Logical. If \code{TRUE}, progress messages are printed
+to the console via \code{message()}. Default \code{TRUE}.
+Set to \code{FALSE} or wrap the call in \code{suppressMessages()} to
+silence all output.}
 }
 \value{
-Invisibly returns a named list of ASM result objects, one per sample.
+Invisibly returns a named list of ASM result objects, one per
+  sample. Each element is the list returned by \code{\link{ASM}},
+  containing \code{$asm}, \code{$snp_cpg}, and \code{$meth_summary}.
 }
 \description{
 Convenience wrapper that executes the complete three-step pipeline:
-(1) \code{\link{extract_bam_regions}}, (2) \code{\link{prepare_cpg_snp_input}},
+(1) \code{\link{prepare_cpg_snp_input}}, (2) \code{\link{extract_bam_regions}},
 and (3) \code{\link{ASM}} for every sample in a directory.
 Controls and patients are always processed independently using their
 respective \code{filter_cpgs} reference files.
 }
 \examples{
-if (FALSE) {
-  ctrl_ref <- system.file("extdata", "filter_cpgs_ctrl.xlsx",
-                          package = "ImprintCapASM")
-  bed      <- system.file("extdata", "dmr_regions.bed",
-                          package = "ImprintCapASM")
+\donttest{
+if (nchar(Sys.which("samtools")) > 0L) {
+  extdata    <- system.file("extdata", package = "ImprintCapASM")
+  cpg_ref    <- file.path(extdata, "example_filter_cpgs.xlsx")
+  bed        <- file.path(extdata, "example_cpg_snp.bed")
+  output_dir <- tempdir()
 
   results <- run_pipeline(
-    bam_dir      = "/data/controls/bam",
-    snp_dir      = "/data/controls/snps",
-    meth_dir     = "/data/controls/meth",
-    cpg_ref_file = ctrl_ref,
-    output_dir   = "/data/controls/output",
+    bam_dir      = extdata,
+    snp_dir      = extdata,
+    meth_dir     = extdata,
+    cpg_ref_file = cpg_ref,
+    output_dir   = output_dir,
     sample_type  = "control",
     bed_file     = bed
   )
+  head(results[[1]]$asm)
 }
-
+}
 }

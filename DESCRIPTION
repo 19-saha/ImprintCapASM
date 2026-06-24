@@ -11,10 +11,12 @@ Authors@R: c(person(given = "Subham", family = "Saha",
              person(given = "Frederic", family = "Brioude",
                     email = "frederic.brioude@aphp.fr",
                     role = c("aut", "fnd")))
-Description: Provides tools for SNP-phased allele-specific methylation (ASM)
-    analysis across the 41 known imprinted differentially methylated regions
-    (DMRs). Designed for diagnostic profiling of imprinting disorder cases
-    from bisulfite sequencing data.
+Description: Provides functions for SNP-phased allele-specific methylation (ASM)
+    analysis across the 41 canonical human imprinted differentially methylated
+    regions (DMRs). Reads are assigned to REF or ALT alleles based on
+    bisulfite-aware SNP detection, enabling diagnosis of imprinting disorders
+    from whole-genome bisulfite sequencing data.
+    <https://github.com/19-saha/ImprintCapASM>.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Imports:
@@ -29,6 +31,7 @@ Suggests:
     testthat (>= 3.0.0),
     knitr,
     rmarkdown
+SystemRequirements: samtools (>= 1.10)
 VignetteBuilder: knitr
 URL: https://github.com/19-saha/ImprintCapASM
 BugReports: https://github.com/19-saha/ImprintCapASM/issues

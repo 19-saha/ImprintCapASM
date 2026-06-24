@@ -9,23 +9,59 @@ extract_bam_regions(
   bed_file,
   output_dir = dirname(bam_file),
   overwrite = FALSE,
-  sample_type = c("control", "patient")
+  sample_type = c("control", "patient"),
+  verbose = TRUE
 )
 }
 \arguments{
-\item{bam_file}{Path to the input markdup BAM file}
+\item{bam_file}{Character. Path to the input \code{_markdup.bam} file
+(a \code{.bai} index must be present alongside it).}
 
-\item{bed_file}{Path to the BED file from prepare_cpg_snp_input()}
+\item{bed_file}{Character. Path to the BED file produced by
+\code{\link{prepare_cpg_snp_input}}.}
 
-\item{output_dir}{Output directory (defaults to dirname of bam_file)}
+\item{output_dir}{Character. Directory for output files. Defaults to
+\code{dirname(bam_file)}.}
 
-\item{overwrite}{If FALSE, skip if output BAM already exists}
+\item{overwrite}{Logical. If \code{FALSE} (default), skips extraction
+when the output BAM already exists.}
 
-\item{sample_type}{Either "control" or "patient"}
+\item{sample_type}{Character. Either \code{"control"} or
+\code{"patient"}.}
+
+\item{verbose}{Logical. If \code{TRUE} (default), progress messages
+are written via \code{message()}. Set to \code{FALSE} or wrap the call
+in \code{suppressMessages()} to silence all output.}
 }
 \value{
-Path to the output BAM file (invisibly)
+The path to the output BAM file (returned invisibly).
 }
 \description{
-Extract BAM Regions Around SNP Windows
+Calls \code{samtools view} and \code{samtools sort} to subset a
+whole-genome bisulfite BAM file to the genomic windows defined in a BED
+file, producing a smaller indexed BAM suitable for input to
+\code{\link{ASM}}.
+}
+\details{
+Requires \code{samtools} to be available on the system \code{PATH}.
+The function calls \code{samtools view -b}, \code{samtools sort}, and
+\code{samtools index} in sequence. If no \code{.bai} index is found
+alongside \code{bam_file}, \code{\link[Rsamtools]{indexBam}} is called
+automatically.
+}
+\examples{
+\donttest{
+if (nchar(Sys.which("samtools")) > 0L) {
+  extdata <- system.file("extdata", package = "ImprintCapASM")
+
+  out_bam <- extract_bam_regions(
+    bam_file    = file.path(extdata, "example.bam"),
+    bed_file    = file.path(extdata, "example_cpg_snp.bed"),
+    output_dir  = tempdir(),
+    sample_type = "control"
+  )
+  file.exists(out_bam)
+}
+}
+
 }

@@ -1,3 +1,4 @@
+library(ImprintCapASM)
 test_that("rejects invalid sample_type", {
   expect_error(
     ASM(
@@ -17,6 +18,8 @@ test_that("rejects missing cpg_snp_file", {
       sam_file         = "dummy.bam",
       filter_cpgs_file = "dummy.xlsx",
       sample_type      = "patient"
-    )
+        ),
+    regexp = "not found|does not exist|cannot open"
   )
 })
+

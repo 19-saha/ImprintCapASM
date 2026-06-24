@@ -11,27 +11,59 @@ prepare_cpg_snp_input(
   output_file = NULL,
   min_depth = 20L,
   window_bp = 60L,
-  sample_type = c("control", "patient")
+  sample_type = c("control", "patient"),
+  verbose = TRUE
 )
 }
 \arguments{
-\item{snp_file}{Path to a VCF file (ending in _all.SNPs.out)}
+\item{snp_file}{Character. Path to a VCF-like file ending in
+\code{_all.SNPs.out}.}
 
-\item{meth_file}{Path to the bismark/gemBS methylation table}
+\item{meth_file}{Character. Path to the gemBS/Bismark CpG methylation
+table (\code{.cov} or \code{.txt}).}
 
-\item{cpg_ref_file}{Path to the CpG panel reference Excel file}
+\item{cpg_ref_file}{Character. Path to the CpG panel reference Excel file
+(\code{filter_cpgs_ctrl.xlsx} or \code{filter_cpgs_pat.xlsx}).}
 
-\item{output_file}{Optional path for the output .xlsx; auto-named if NULL}
+\item{output_file}{Character or \code{NULL}. Path for the output
+\code{.xlsx}. Auto-named as
+\code{cpg_snps_CG_<sample_type>_<sample_id>.xlsx} if \code{NULL}.}
 
-\item{min_depth}{Minimum total SNP read depth (default 20)}
+\item{min_depth}{Integer. Minimum total SNP read depth. Default
+\code{20L}.}
 
-\item{window_bp}{Window in bp around each SNP (default 60)}
+\item{window_bp}{Integer. Window in base pairs around each SNP used
+to search for CpG positions. Default \code{60L}.}
 
-\item{sample_type}{Either "control" or "patient"}
+\item{sample_type}{Character. Either \code{"control"} or
+\code{"patient"}.}
+
+\item{verbose}{Logical. If \code{TRUE} (default), progress messages
+are written via \code{message()}. Set to \code{FALSE} or wrap the call
+in \code{suppressMessages()} to silence all output.}
 }
 \value{
-A data.table of CpG-SNP pairs (invisibly)
+A \code{data.table} of CpG-SNP pairs (returned invisibly). The
+  \code{.xlsx} and \code{.bed} files are written as side effects.
 }
 \description{
-Prepare CpG-SNP Input Table
+Loads a bisulfite SNP \code{.out} file and a CpG methylation file,
+intersects heterozygous SNPs with the 41-DMR CpG panel, and returns
+a per-sample CpG-SNP pair table ready for input to \code{\link{ASM}}.
+}
+\examples{
+\donttest{
+  extdata    <- system.file("extdata", package = "ImprintCapASM")
+  cpg_snp_tmp <- tempfile(fileext = ".xlsx")
+
+  result <- prepare_cpg_snp_input(
+    snp_file     = file.path(extdata, "example_snp.out"),
+    meth_file    = file.path(extdata, "example_cgmeth.txt"),
+    cpg_ref_file = file.path(extdata, "example_filter_cpgs.xlsx"),
+    output_file  = cpg_snp_tmp,
+    sample_type  = "control"
+  )
+  head(result)
+}
+
 }
