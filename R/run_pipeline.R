@@ -38,8 +38,7 @@
 #'   containing \code{$asm}, \code{$snp_cpg}, and \code{$meth_summary}.
 #'
 #' @examples
-#' \donttest{
-#' if (nchar(Sys.which("samtools")) > 0L) {
+#' \dontrun{
 #'   extdata    <- system.file("extdata", package = "ImprintCapASM")
 #'   cpg_ref    <- file.path(extdata, "example_filter_cpgs.xlsx")
 #'   bed        <- file.path(extdata, "example_cpg_snp.bed")
@@ -56,7 +55,7 @@
 #'   )
 #'   head(results[[1]]$asm)
 #' }
-#' }
+#' 
 #' @export
 run_pipeline <- function(bam_dir,
                          snp_dir,

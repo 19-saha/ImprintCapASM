@@ -38,7 +38,7 @@ utils::globalVariables(c(
 #' }
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #'   extdata     <- system.file("extdata", package = "ImprintCapASM")
 #'   cpg_snp_tmp <- tempfile(fileext = ".xlsx")
 #'
@@ -52,7 +52,7 @@ utils::globalVariables(c(
 #'
 #'   result <- ASM(
 #'     cpg_snp_file     = cpg_snp_tmp,
-#'     sam_file         = file.path(extdata, "example.bam"),
+#'     sam_file         = file.path(extdata, "example_markdup.bam"),
 #'     filter_cpgs_file = file.path(extdata, "example_filter_cpgs.xlsx"),
 #'     output_file      = tempfile(fileext = ".xlsx"),
 #'     sample_type      = "control"

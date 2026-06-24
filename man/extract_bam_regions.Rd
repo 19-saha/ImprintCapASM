@@ -55,7 +55,7 @@ if (nchar(Sys.which("samtools")) > 0L) {
   extdata <- system.file("extdata", package = "ImprintCapASM")
 
   out_bam <- extract_bam_regions(
-    bam_file    = file.path(extdata, "example.bam"),
+    bam_file    = file.path(extdata, "example_markdup.bam"),
     bed_file    = file.path(extdata, "example_cpg_snp.bed"),
     output_dir  = tempdir(),
     sample_type = "control"

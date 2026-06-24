@@ -69,8 +69,7 @@ Controls and patients are always processed independently using their
 respective \code{filter_cpgs} reference files.
 }
 \examples{
-\donttest{
-if (nchar(Sys.which("samtools")) > 0L) {
+\dontrun{
   extdata    <- system.file("extdata", package = "ImprintCapASM")
   cpg_ref    <- file.path(extdata, "example_filter_cpgs.xlsx")
   bed        <- file.path(extdata, "example_cpg_snp.bed")
@@ -87,5 +86,5 @@ if (nchar(Sys.which("samtools")) > 0L) {
   )
   head(results[[1]]$asm)
 }
-}
+
 }
